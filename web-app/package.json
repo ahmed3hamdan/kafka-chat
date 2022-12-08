@@ -10,16 +10,23 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@emotion/css": "^11.10.5",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@fontsource/roboto": "^4.5.8",
     "@mui/icons-material": "^5.10.16",
+    "@mui/lab": "^5.0.0-alpha.110",
     "@mui/material": "^5.10.16",
+    "formik": "^2.2.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.4.4"
+    "react-router-dom": "^6.4.4",
+    "react-virtuoso": "^3.1.5",
+    "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@emotion/babel-plugin": "^11.10.5",
+    "@types/node": "^18.11.11",
     "@types/react": "^18.0.25",
     "@types/react-dom": "^18.0.9",
     "@vitejs/plugin-react": "^2.2.0",
