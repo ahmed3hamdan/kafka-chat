@@ -4,6 +4,7 @@ import "github.com/spf13/viper"
 
 var ApiAddress string
 var PostgresUrl string
+var JwtSecret string
 
 func init() {
 	viper.SetDefault("api_address", ":4000")
@@ -12,4 +13,5 @@ func init() {
 
 	ApiAddress = viper.GetString("api_address")
 	PostgresUrl = viper.GetString("postgres_url")
+	JwtSecret = viper.GetString("jwt_secret")
 }

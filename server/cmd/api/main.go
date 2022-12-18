@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/handlers/auth"
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/handlers/message"
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/handlers/user"
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/config"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/auth"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/message"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/user"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	migration, err := migrate.New("file://internal/api/migrations", config.PostgresUrl)
+	migration, err := migrate.New("file://migrations", config.PostgresUrl)
 	if err != nil {
 		logrus.Fatalln(err)
 	}
