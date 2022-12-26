@@ -3,8 +3,11 @@ package api
 import "go/types"
 
 const (
-	InvalidRequestBodyErrorCode int = 1001
-	UsernameRegisteredErrorCode     = 1002
+	InvalidRequestBodyErrorCode = 1001
+	UsernameRegisteredErrorCode = 1002
+	InvalidParamsErrorCode      = 1003
+	NotFoundErrorCode           = 1004
+	PasswordMismatchErrorCode   = 1005
 )
 
 type ErrorResponse[D any] struct {
@@ -21,10 +24,34 @@ func InvalidRequestBody(message string) ErrorResponse[types.Nil] {
 	}
 }
 
+func InvalidRequestParams(message string) ErrorResponse[types.Nil] {
+	return ErrorResponse[types.Nil]{
+		Code:    InvalidParamsErrorCode,
+		Message: message,
+		Data:    nil,
+	}
+}
+
 func UsernameRegistered() ErrorResponse[types.Nil] {
 	return ErrorResponse[types.Nil]{
 		Code:    UsernameRegisteredErrorCode,
 		Message: "username already registered",
+		Data:    nil,
+	}
+}
+
+func NotFound(message string) ErrorResponse[types.Nil] {
+	return ErrorResponse[types.Nil]{
+		Code:    NotFoundErrorCode,
+		Message: message,
+		Data:    nil,
+	}
+}
+
+func PasswordMismatch() ErrorResponse[types.Nil] {
+	return ErrorResponse[types.Nil]{
+		Code:    PasswordMismatchErrorCode,
+		Message: "hash and password mismatch",
 		Data:    nil,
 	}
 }

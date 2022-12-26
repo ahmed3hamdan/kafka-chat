@@ -11,19 +11,17 @@ import (
 )
 
 func Register(c *fiber.Ctx) error {
-	var err error
 	var body api.RegisterRequestBody
 
-	if err = c.BodyParser(&body); err != nil {
+	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestBody(err.Error()))
 	}
 
-	if err = validator.Validate.Struct(body); err != nil {
+	if err := validator.Validate.Struct(body); err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestBody(err.Error()))
 	}
 
-	var hashedPassword []byte
-	hashedPassword, err = bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
@@ -47,7 +45,7 @@ func Register(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.JSON(api.RegisterResponse{
+	return c.JSON(api.AuthResponse{
 		UserID: user.UserID,
 		Token:  authToken,
 	})

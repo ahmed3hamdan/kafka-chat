@@ -8,6 +8,7 @@ import (
 )
 
 var UsernameRegisteredError = errors.New("username registered")
+var UserNotFoundError = errors.New("user not found")
 
 type User struct {
 	UserID   int64
@@ -26,4 +27,14 @@ func InsertUser(ctx context.Context, user *User) error {
 	}
 
 	return err
+}
+
+func GetUserByUsername(ctx context.Context, username string) (User, error) {
+	user := User{Username: username}
+	err := db.Pgx.QueryRow(ctx, `SELECT "userID", "name", "password" FROM "user" WHERE "username" = $1`, username).
+		Scan(&user.UserID, &user.Name, &user.Password)
+	if err == pgx.ErrNoRows {
+		return user, UserNotFoundError
+	}
+	return user, err
 }
