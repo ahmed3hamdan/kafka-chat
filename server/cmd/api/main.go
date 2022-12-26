@@ -6,6 +6,7 @@ import (
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/user"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/config"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -28,8 +29,10 @@ func init() {
 
 func main() {
 	app := fiber.New(fiber.Config{
-		DisableStartupMessage: true,
+		CaseSensitive: true,
 	})
+
+	app.Use(logger.New())
 
 	apiRoute := app.Group("/api")
 
