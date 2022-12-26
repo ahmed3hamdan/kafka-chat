@@ -29,6 +29,16 @@ func InsertUser(ctx context.Context, user *User) error {
 	return err
 }
 
+func GetUserById(ctx context.Context, userID int64) (User, error) {
+	user := User{UserID: userID}
+	err := db.Pgx.QueryRow(ctx, `SELECT "name", "username", "password" FROM "user" WHERE "userID" = $1`, userID).
+		Scan(&user.Name, &user.Username, &user.Password)
+	if err == pgx.ErrNoRows {
+		return user, UserNotFoundError
+	}
+	return user, err
+}
+
 func GetUserByUsername(ctx context.Context, username string) (User, error) {
 	user := User{Username: username}
 	err := db.Pgx.QueryRow(ctx, `SELECT "userID", "name", "password" FROM "user" WHERE "username" = $1`, username).

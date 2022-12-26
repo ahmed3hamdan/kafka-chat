@@ -42,7 +42,7 @@ func main() {
 
 	authRoute.Post("/login", auth.Login)
 	authRoute.Post("/register", auth.Register)
-	authRoute.Get("/self-info", auth.GetSelfInfo)
+	authRoute.Get("/self-info", auth.RequireAuthMiddleware, auth.GetSelfInfo)
 	userRoute.Get("/:userID", user.GetUserByUsername)
 	messageRoute.Post("/", message.SendMessage)
 

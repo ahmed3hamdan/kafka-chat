@@ -8,6 +8,7 @@ const (
 	InvalidParamsErrorCode      = 1003
 	NotFoundErrorCode           = 1004
 	PasswordMismatchErrorCode   = 1005
+	InvalidAuthTokenErrorCode   = 1006
 )
 
 type ErrorResponse[D any] struct {
@@ -52,6 +53,14 @@ func PasswordMismatch() ErrorResponse[types.Nil] {
 	return ErrorResponse[types.Nil]{
 		Code:    PasswordMismatchErrorCode,
 		Message: "hash and password mismatch",
+		Data:    nil,
+	}
+}
+
+func InvalidAuthToken(message string) ErrorResponse[types.Nil] {
+	return ErrorResponse[types.Nil]{
+		Code:    InvalidAuthTokenErrorCode,
+		Message: message,
 		Data:    nil,
 	}
 }

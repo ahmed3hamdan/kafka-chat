@@ -15,3 +15,9 @@ type LoginRequestBody struct {
 	Username string `json:"username" validate:"required,max=20,username"`
 	Password string `json:"password" validate:"required,max=72"`
 }
+
+type GetSelfInfoResponse struct {
+	UserID   int64  `json:"userID"`
+	Name     string `json:"name"`
+	Username string `json:"username"`
+}
