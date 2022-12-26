@@ -1,7 +1,7 @@
 package token
 
 import (
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/config"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/config"
 	"github.com/golang-jwt/jwt/v4"
 )
 

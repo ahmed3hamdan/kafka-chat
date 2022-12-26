@@ -1,8 +1,8 @@
-package connector
+package db
 
 import (
 	"context"
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/config"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/config"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 )

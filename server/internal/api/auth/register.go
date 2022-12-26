@@ -2,61 +2,53 @@ package auth
 
 import (
 	"errors"
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/api_errors"
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/connector"
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/token"
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/validator"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/api"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/model"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/token"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/validator"
 	"github.com/gofiber/fiber/v2"
-	"github.com/jackc/pgx/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type registerRequestBody struct {
-	Name     string `json:"name" validate:"required,max=60"`
-	Username string `json:"username" validate:"required,max=20,username"`
-	Password string `json:"password" validate:"required,max=72"`
-}
-
-type registerResponse struct {
-	UserID int64  `json:"userID"`
-	Token  string `json:"token"`
-}
-
 func Register(c *fiber.Ctx) error {
-	var body registerRequestBody
+	var err error
+	var body api.RegisterRequestBody
 
-	if err := c.BodyParser(&body); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(api_errors.InvalidRequestBody(err.Error()))
+	if err = c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestBody(err.Error()))
 	}
 
-	if err := validator.Validate.Struct(body); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(api_errors.InvalidRequestBody(err.Error()))
+	if err = validator.Validate.Struct(body); err != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestBody(err.Error()))
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	var hashedPassword []byte
+	hashedPassword, err = bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
-	var userID int64
-	err = connector.Pgx.
-		QueryRow(c.Context(), `INSERT INTO "user" ("name", "username", "password") VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING "userID" `, body.Name, body.Username, hashedPassword).
-		Scan(&userID)
+	user := model.User{
+		Name:     body.Name,
+		Username: body.Username,
+		Password: hashedPassword,
+	}
 
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return c.Status(fiber.StatusConflict).JSON(api_errors.UsernameRegistered())
+	if err = model.InsertUser(c.Context(), &user); err != nil {
+		if errors.Is(err, model.UsernameRegisteredError) {
+			return c.Status(fiber.StatusConflict).JSON(api.UsernameRegistered())
 		}
 		return err
 	}
 
-	authToken, err := token.CreateAuthToken(userID)
+	var authToken string
+	authToken, err = token.CreateAuthToken(user.UserID)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(registerResponse{
-		UserID: userID,
+	return c.JSON(api.RegisterResponse{
+		UserID: user.UserID,
 		Token:  authToken,
 	})
 }
