@@ -9,9 +9,7 @@ import (
 func GetSelfInfo(c *fiber.Ctx) error {
 	userID := c.Locals("userID").(int64)
 	user, err := model.GetUserById(c.Context(), userID)
-	if err == model.UserNotFoundError {
-		return c.Status(fiber.StatusNotFound).JSON(api.NotFound(err.Error()))
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 	return c.JSON(api.GetSelfInfoResponse{
