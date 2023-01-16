@@ -4,7 +4,9 @@
       "@components/*": ["./src/components/*"],
       "@styles/*": ["./src/styles/*"],
       "@sdk/*": ["./src/sdk/*"],
-      "@views/*": ["./src/views/*"]
+      "@views/*": ["./src/views/*"],
+      "@config/*": ["./src/config/*"],
+      "@contexts/*": ["./src/contexts/*"]
     },
     "target": "ESNext",
     "useDefineForClassFields": true,

@@ -13,23 +13,23 @@ func Login(c *fiber.Ctx) error {
 	var body api.LoginRequestBody
 
 	if err := c.BodyParser(&body); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestBody(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(api.InvalidRequestBody(err.Error()))
 	}
 
 	if err := validator.Validate.Struct(body); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestBody(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(api.InvalidRequestBody(err.Error()))
 	}
 
 	user, err := model.GetUserByUsername(c.Context(), body.Username)
 	if err == model.UserNotFoundError {
-		return c.Status(fiber.StatusNotFound).JSON(api.NotFound(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(api.NotFound(err.Error()))
 	} else if err != nil {
 		return err
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.Password, []byte(body.Password))
 	if err == bcrypt.ErrMismatchedHashAndPassword {
-		return c.Status(fiber.StatusUnauthorized).JSON(api.PasswordMismatch())
+		return c.Status(fiber.StatusBadRequest).JSON(api.PasswordMismatch())
 	} else if err != nil {
 		return err
 	}

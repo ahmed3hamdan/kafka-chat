@@ -1,5 +1,4 @@
 import React, { useRef } from "react";
-import * as Yup from "yup";
 import {
   Button,
   Dialog,
@@ -22,9 +21,9 @@ const initialValues: NewConversationValues = {
   email: "",
 };
 
-const validationSchema = Yup.object().shape({
-  email: Yup.string().trim().required().email(),
-});
+// const validationSchema = Yup.object().shape({
+//   email: Yup.string().trim().required().email(),
+// });
 
 interface NewConversationDialogProps
   extends Omit<DialogProps, "onSubmit" | "onClose"> {
@@ -53,7 +52,7 @@ const NewConversationDialog: React.FC<NewConversationDialogProps> = ({
     >
       <Formik
         initialValues={initialValues}
-        validationSchema={validationSchema}
+        // validationSchema={validationSchema}
         onSubmit={onSubmit}
         innerRef={formikRef}
       >

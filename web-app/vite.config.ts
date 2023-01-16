@@ -17,6 +17,16 @@ export default defineConfig({
       "@styles": path.resolve(__dirname, "./src/styles"),
       "@sdk": path.resolve(__dirname, "./src/sdk"),
       "@views": path.resolve(__dirname, "./src/views"),
+      "@config": path.resolve(__dirname, "./src/config"),
+      "@contexts": path.resolve(__dirname, "./src/contexts"),
+    },
+  },
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:4000",
+        changeOrigin: true,
+      },
     },
   },
 });

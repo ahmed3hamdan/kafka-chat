@@ -1,8 +1,9 @@
 import React, { HTMLAttributes, useState } from "react";
-import { Link, Outlet, useMatch } from "react-router-dom";
+import { Link, Navigate, Outlet, useMatch } from "react-router-dom";
 import {
   Avatar,
-  Box, css,
+  Box,
+  css,
   Divider,
   Drawer,
   IconButton,
@@ -16,19 +17,15 @@ import {
   MenuItem,
   MenuList,
   styled,
-  Typography
+  Typography,
 } from "@mui/material";
-import {
-  MoreVert as MoreVertIcon,
-  Add as AddIcon,
-  Logout as LogoutIcon,
-} from "@mui/icons-material";
+import { MoreVert as MoreVertIcon, Add as AddIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import LogoutDialog from "@components/overlay/LogoutDialog";
-import NewConversationDialog, {
-  NewConversationValues,
-} from "@components/overlay/NewConversationDialog";
+import NewConversationDialog, { NewConversationValues } from "@components/overlay/NewConversationDialog";
 import { Components, Virtuoso } from "react-virtuoso";
 import { SingleConversation } from "@sdk/types";
+import { useAppContext } from "@contexts/appContext";
+import useGetSelfInfoQuery from "../hooks/useGetSelfInfoQuery";
 
 const StyledVirtuoso = styled(Virtuoso)`
   flex-grow: 1;
@@ -38,17 +35,10 @@ interface ConversationListItemProps {
   conversation: SingleConversation;
 }
 
-const ConversationListItem: React.FC<ConversationListItemProps> = ({
-  conversation,
-}) => {
+const ConversationListItem: React.FC<ConversationListItemProps> = ({ conversation }) => {
   const match = useMatch({ path: "/:userID" });
   return (
-    <ListItemButton
-      selected={match !== null && match.params.userID === conversation.userID}
-      component={Link}
-      to={`/${conversation.userID}`}
-      dense
-    >
+    <ListItemButton selected={match !== null && match.params.userID === conversation.userID} component={Link} to={`/${conversation.userID}`} dense>
       <ListItemAvatar>
         <Avatar alt={conversation.name}>{conversation.name.charAt(0)}</Avatar>
       </ListItemAvatar>
@@ -67,28 +57,17 @@ const ConversationListItem: React.FC<ConversationListItemProps> = ({
 type DialogId = "logout" | "new-conversation";
 
 const virtuosoComponents: Components = {
-  List: React.forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-    ({ style, children }, listRef) => {
-      return (
-        <List
-          style={{ padding: 0, ...style, margin: 0 }}
-          component="div"
-          ref={listRef}
-        >
-          {children}
-        </List>
-      );
-    }
-  ),
+  List: React.forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children }, listRef) => {
+    return (
+      <List style={{ padding: 0, ...style, margin: 0 }} component="div" ref={listRef}>
+        {children}
+      </List>
+    );
+  }),
   Item: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) => {
     return (
       <>
-        <ListItem
-          component="div"
-          {...props}
-          style={{ margin: 0 }}
-          disablePadding
-        >
+        <ListItem component="div" {...props} style={{ margin: 0 }} disablePadding>
           {children}
         </ListItem>
         <Divider />
@@ -103,12 +82,12 @@ const layoutCss = css`
 `;
 
 const MainView = () => {
+  const { setAuth } = useAppContext();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [openDialog, setOpenDialog] = useState<DialogId | null>(null);
+  const selfInfoQuery = useGetSelfInfoQuery();
 
-  const handleProfileMoreClick = (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const handleProfileMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -132,6 +111,7 @@ const MainView = () => {
 
   const handleLogoutConfirm = () => {
     setOpenDialog(null);
+    setAuth(null);
   };
 
   const handleNewConversationSubmit = ({ email }: NewConversationValues) => {
@@ -143,6 +123,10 @@ const MainView = () => {
       }, 3000);
     });
   };
+
+  if (!selfInfoQuery.isSuccess) {
+    return null;
+  }
 
   return (
     <>
@@ -163,12 +147,9 @@ const MainView = () => {
             }
           >
             <ListItemAvatar>
-              <Avatar alt="Ahmad Hamdan">A</Avatar>
+              <Avatar alt={selfInfoQuery.data.name}>{selfInfoQuery.data.name.charAt(0)}</Avatar>
             </ListItemAvatar>
-            <ListItemText
-              primary={<Typography noWrap>Ahmad Hamdan</Typography>}
-              secondary="ahmed3hamdan"
-            />
+            <ListItemText primary={<Typography noWrap>{selfInfoQuery.data.name}</Typography>} secondary={selfInfoQuery.data.username} />
           </ListItem>
           <Divider />
           <StyledVirtuoso
@@ -214,16 +195,8 @@ const MainView = () => {
           </MenuItem>
         </MenuList>
       </Menu>
-      <LogoutDialog
-        open={openDialog == "logout"}
-        onClose={handleDialogClose}
-        onLogout={handleLogoutConfirm}
-      />
-      <NewConversationDialog
-        open={openDialog == "new-conversation"}
-        onClose={handleDialogClose}
-        onSubmit={handleNewConversationSubmit}
-      />
+      <LogoutDialog open={openDialog == "logout"} onClose={handleDialogClose} onLogout={handleLogoutConfirm} />
+      <NewConversationDialog open={openDialog == "new-conversation"} onClose={handleDialogClose} onSubmit={handleNewConversationSubmit} />
       <div css={layoutCss}>
         <Outlet />
       </div>
@@ -231,4 +204,12 @@ const MainView = () => {
   );
 };
 
-export default MainView;
+const MainViewWrapper = () => {
+  const { auth } = useAppContext();
+  if (auth === null) {
+    return <Navigate to="/login" replace />;
+  }
+  return <MainView />;
+};
+
+export default MainViewWrapper;

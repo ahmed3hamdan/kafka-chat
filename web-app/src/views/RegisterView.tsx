@@ -21,29 +21,31 @@ import {
 } from "@sdk/ApiSdk";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 
-const loginSchema = z.object({
+const registerSchema = z.object({
+  name: z.string().trim().max(60),
   username: z.string().max(20).regex(/^[a-z][a-z0-9_\-]*$/),
   password: z.string().max(72),
 });
 
-type LoginValues = z.infer<typeof loginSchema>;
+type RegisterValues = z.infer<typeof registerSchema>;
 
-const initialValues: LoginValues = {
+const initialValues: RegisterValues = {
+  name: "",
   username: "",
   password: "",
 };
 
-const LoginView = () => {
+const RegisterView = () => {
   const { api, setAuth } = useAppContext();
   const { mutateAsync, isError, error } = useMutation(
-    ({ username, password }: LoginValues) => api.login({ username, password }),
+    ({ name, username, password }: RegisterValues) => api.register({ name, username, password }),
     {
       onSuccess: ({ userID, token }) => setAuth({ userID, token }),
     }
   );
 
   const handleSubmit = useCallback(
-    (values: LoginValues) => mutateAsync(values),
+    (values: RegisterValues) => mutateAsync(values),
     [mutateAsync]
   );
 
@@ -52,10 +54,8 @@ const LoginView = () => {
       switch (error.code) {
         case ResponseErrorCode.InvalidRequestBodyErrorCode:
           return "Invalid inputs";
-        case ResponseErrorCode.NotFoundErrorCode:
-          return "User not registered";
-        case ResponseErrorCode.PasswordMismatchErrorCode:
-          return "Incorrect password";
+        case ResponseErrorCode.UsernameRegisteredErrorCode:
+          return "Username already registered";
       }
     }
     if (error instanceof InternalServerError) {
@@ -70,11 +70,24 @@ const LoginView = () => {
   return (
     <Container component="main" maxWidth="xs" sx={{ py: 5 }}>
       <Typography component="h1" variant="h5" textAlign="center">
-        Login
+        Register
       </Typography>
-      <Formik initialValues={initialValues} onSubmit={handleSubmit} validationSchema={toFormikValidationSchema(loginSchema)}>
+      <Formik initialValues={initialValues} onSubmit={handleSubmit} validationSchema={toFormikValidationSchema(registerSchema)}>
         {({ isSubmitting, values, touched, errors, handleChange }) => (
           <Form noValidate>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              label="Name"
+              name="name"
+              autoComplete="name"
+              value={values.name}
+              onChange={handleChange}
+              error={touched.name && Boolean(errors.name)}
+              helperText={touched.name && errors.name}
+              autoFocus
+            />
             <TextField
               margin="normal"
               required
@@ -86,7 +99,6 @@ const LoginView = () => {
               onChange={handleChange}
               error={touched.username && Boolean(errors.username)}
               helperText={touched.username && errors.username}
-              autoFocus
             />
             <TextField
               margin="normal"
@@ -113,18 +125,18 @@ const LoginView = () => {
               variant="contained"
               sx={{ mt: 2 }}
             >
-              Log in
+              Register
             </LoadingButton>
           </Form>
         )}
       </Formik>
-      <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
-        <MuiLink component={Link} to="/register">
-          Register
+      <Stack direction="row" sx={{ mt: 2 }}>
+        <MuiLink component={Link} to="/login">
+          Login
         </MuiLink>
       </Stack>
     </Container>
   );
 };
 
-export default LoginView;
+export default RegisterView;
