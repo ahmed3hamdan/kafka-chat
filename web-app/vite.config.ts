@@ -18,7 +18,9 @@ export default defineConfig({
       "@sdk": path.resolve(__dirname, "./src/sdk"),
       "@views": path.resolve(__dirname, "./src/views"),
       "@config": path.resolve(__dirname, "./src/config"),
-      "@contexts": path.resolve(__dirname, "./src/contexts"),
+      "@hooks": path.resolve(__dirname, "./src/hooks"),
+      "@lib": path.resolve(__dirname, "./src/lib"),
+      "@store": path.resolve(__dirname, "./src/store"),
     },
   },
   server: {

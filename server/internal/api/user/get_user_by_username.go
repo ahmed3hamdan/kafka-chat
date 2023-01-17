@@ -10,17 +10,17 @@ import (
 func GetUserByUsername(c *fiber.Ctx) error {
 	var params api.GetUserByUsernameParams
 
-	if err := c.ParamsParser(&params); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestParams(err.Error()))
+	if err := c.BodyParser(&params); err != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestBody(err.Error()))
 	}
 
 	if err := validator.Validate.Struct(params); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestParams(err.Error()))
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestBody(err.Error()))
 	}
 
 	user, err := model.GetUserByUsername(c.Context(), params.Username)
 	if err == model.UserNotFoundError {
-		return c.Status(fiber.StatusNotFound).JSON(api.NotFound(err.Error()))
+		return c.Status(fiber.StatusNotFound).JSON(api.UserNotFound(err.Error()))
 	} else if err != nil {
 		return err
 	}

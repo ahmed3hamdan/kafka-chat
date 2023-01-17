@@ -24,8 +24,7 @@ import LogoutDialog from "@components/overlay/LogoutDialog";
 import NewConversationDialog, { NewConversationValues } from "@components/overlay/NewConversationDialog";
 import { Components, Virtuoso } from "react-virtuoso";
 import { SingleConversation } from "@sdk/types";
-import { useAppContext } from "@contexts/appContext";
-import useGetSelfInfoQuery from "../hooks/useGetSelfInfoQuery";
+import useAuth from "@hooks/useAuth";
 
 const StyledVirtuoso = styled(Virtuoso)`
   flex-grow: 1;
@@ -82,10 +81,9 @@ const layoutCss = css`
 `;
 
 const MainView = () => {
-  const { setAuth } = useAppContext();
+  const { logout } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [openDialog, setOpenDialog] = useState<DialogId | null>(null);
-  const selfInfoQuery = useGetSelfInfoQuery();
 
   const handleProfileMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -111,7 +109,7 @@ const MainView = () => {
 
   const handleLogoutConfirm = () => {
     setOpenDialog(null);
-    setAuth(null);
+    logout();
   };
 
   const handleNewConversationSubmit = ({ email }: NewConversationValues) => {
@@ -123,10 +121,6 @@ const MainView = () => {
       }, 3000);
     });
   };
-
-  if (!selfInfoQuery.isSuccess) {
-    return null;
-  }
 
   return (
     <>
@@ -147,9 +141,9 @@ const MainView = () => {
             }
           >
             <ListItemAvatar>
-              <Avatar alt={selfInfoQuery.data.name}>{selfInfoQuery.data.name.charAt(0)}</Avatar>
+              <Avatar alt={"selfInfoQuery.data.name"}>{"selfInfoQuery.data.name".charAt(0)}</Avatar>
             </ListItemAvatar>
-            <ListItemText primary={<Typography noWrap>{selfInfoQuery.data.name}</Typography>} secondary={selfInfoQuery.data.username} />
+            <ListItemText primary={<Typography noWrap>{"selfInfoQuery.data.name"}</Typography>} secondary={"selfInfoQuery.data.username"} />
           </ListItem>
           <Divider />
           <StyledVirtuoso
@@ -205,8 +199,8 @@ const MainView = () => {
 };
 
 const MainViewWrapper = () => {
-  const { auth } = useAppContext();
-  if (auth === null) {
+  const { loggedIn } = useAuth();
+  if (!loggedIn) {
     return <Navigate to="/login" replace />;
   }
   return <MainView />;

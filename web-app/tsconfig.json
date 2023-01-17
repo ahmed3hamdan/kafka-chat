@@ -6,7 +6,9 @@
       "@sdk/*": ["./src/sdk/*"],
       "@views/*": ["./src/views/*"],
       "@config/*": ["./src/config/*"],
-      "@contexts/*": ["./src/contexts/*"]
+      "@hooks/*": ["./src/hooks/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@store/*": ["./src/store/*"]
     },
     "target": "ESNext",
     "useDefineForClassFields": true,

@@ -1,9 +1,9 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAppContext } from "@contexts/appContext";
+import useAuth from "@hooks/useAuth";
 
 const AuthView = () => {
-  const { auth } = useAppContext();
-  if (auth !== null) {
+  const { loggedIn } = useAuth();
+  if (loggedIn) {
     return <Navigate to="/" replace />;
   }
   return <Outlet />;

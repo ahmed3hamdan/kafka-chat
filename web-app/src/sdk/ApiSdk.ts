@@ -1,15 +1,14 @@
-import Axios, { AxiosError, AxiosInstance, RawAxiosRequestHeaders } from "axios";
+import Axios, { AxiosError, AxiosInstance, AxiosRequestConfig, RawAxiosRequestHeaders } from "axios";
 
-export const ResponseErrorCode = {
-  InvalidRequestBodyErrorCode: 1001,
-  UsernameRegisteredErrorCode: 1002,
-  InvalidParamsErrorCode: 1003,
-  NotFoundErrorCode: 1004,
-  PasswordMismatchErrorCode: 1005,
-  InvalidAuthTokenErrorCode: 1006,
+export const ResponseErrorKeys = {
+  InvalidRequestBodyErrorKey: "invalid-request-body",
+  UsernameRegisteredErrorKey: "username-registered",
+  UserNotFoundErrorKey: "user-not-found",
+  PasswordMismatchErrorKey: "password-mismatch",
+  InvalidAuthTokenErrorKey: "invalid-auth-token",
 } as const;
 
-export type ResponseErrorCodeType = typeof ResponseErrorCode[keyof typeof ResponseErrorCode];
+export type ResponseErrorKey = typeof ResponseErrorKeys[keyof typeof ResponseErrorKeys];
 
 export class ConnectionError extends Error {
   constructor() {
@@ -23,25 +22,17 @@ export class InternalServerError extends Error {
   }
 }
 
-export class ResponseError<T = null> extends Error {
-  readonly code: ResponseErrorCodeType;
+export class ResponseError<T = ResponseErrorKey> extends Error {
+  readonly key: ResponseErrorKey;
   readonly message: string;
   readonly data: T;
 
-  constructor(code: ResponseErrorCodeType, message: string, data: T) {
+  constructor(code: ResponseErrorKey, message: string, data: T) {
     super(message);
-    this.code = code;
+    this.key = code;
     this.message = message;
     this.data = data;
   }
-}
-
-interface InvalidRequestBodyResponseError extends ResponseError {
-  code: typeof ResponseErrorCode.InvalidAuthTokenErrorCode;
-}
-
-interface UsernameRegisteredResponseError extends ResponseError {
-  code: typeof ResponseErrorCode.UsernameRegisteredErrorCode;
 }
 
 export interface ApiSdkParams {
@@ -71,23 +62,32 @@ export interface SelfInfoResponse {
   username: string;
 }
 
-export type LoginResponseErrors = InvalidRequestBodyResponseError;
+export type LoginResponseErrors = ResponseError<typeof ResponseErrorKeys.InvalidRequestBodyErrorKey | typeof ResponseErrorKeys.UsernameRegisteredErrorKey>;
 
-export type RegisterResponseErrors = InvalidRequestBodyResponseError | UsernameRegisteredResponseError;
+export type RegisterResponseErrors = ResponseError<
+  typeof ResponseErrorKeys.InvalidRequestBodyErrorKey | typeof ResponseErrorKeys.UserNotFoundErrorKey | typeof ResponseErrorKeys.PasswordMismatchErrorKey
+>;
 
 class ApiSdk {
+  private authToken: string | null = null;
   private readonly axios: AxiosInstance;
 
-  constructor({ authToken, baseURL }: ApiSdkParams) {
-    const headers: RawAxiosRequestHeaders = {};
-    if (authToken !== undefined) {
-      headers["Authorization"] = `Bearer ${authToken}`;
-    }
+  constructor({ baseURL }: ApiSdkParams) {
     this.axios = Axios.create({
       baseURL,
-      headers,
+    });
+    this.axios.interceptors.request.use((config: AxiosRequestConfig) => {
+      if (this.authToken !== null) {
+        config.headers = (config.headers ?? {}) as RawAxiosRequestHeaders;
+        config.headers["Authorization"] = `Bearer ${this.authToken}`;
+      }
+      return config;
     });
   }
+
+  public setAuthorization = (authToken: string | null) => {
+    this.authToken = authToken;
+  };
 
   private static axiosErrorHandler = <T extends ResponseError = ResponseError>(error: unknown) => {
     const err = error as AxiosError<T>;
@@ -96,8 +96,8 @@ class ApiSdk {
       throw new ConnectionError();
     }
     if (err.response.status < 500) {
-      const { code, message, data } = err.response.data;
-      throw new ResponseError(code, message, data);
+      const { key, message, data } = err.response.data;
+      throw new ResponseError(key, message, data);
     }
     throw new InternalServerError();
   };

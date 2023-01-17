@@ -22,7 +22,7 @@ func Login(c *fiber.Ctx) error {
 
 	user, err := model.GetUserByUsername(c.Context(), body.Username)
 	if err == model.UserNotFoundError {
-		return c.Status(fiber.StatusBadRequest).JSON(api.NotFound(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(api.UserNotFound(err.Error()))
 	} else if err != nil {
 		return err
 	}

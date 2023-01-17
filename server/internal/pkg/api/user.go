@@ -1,7 +1,7 @@
 package api
 
 type GetUserByUsernameParams struct {
-	Username string `params:"username" validate:"required,max=20,username"`
+	Username string `json:"username" validate:"required,max=20,username"`
 }
 
 type GetUserByUsernameResponse struct {

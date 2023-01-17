@@ -3,7 +3,7 @@ import LoginView from "@views/LoginView";
 import RegisterView from "@views/RegisterView";
 import MainView from "@views/MainView";
 import ConversationView from "@views/ConversationView";
-import AuthView from "@views/ConversationView/AuthView";
+import AuthView from "@views/AuthView";
 
 const router = createBrowserRouter([
   {

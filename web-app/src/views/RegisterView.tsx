@@ -1,29 +1,20 @@
-import {
-  Container,
-  TextField,
-  Typography,
-  Link as MuiLink,
-  Stack,
-  Alert,
-} from "@mui/material";
+import { Container, TextField, Typography, Link as MuiLink, Stack, Alert } from "@mui/material";
 import { z } from "zod";
 import { Form, Formik } from "formik";
-import { useCallback, useMemo } from "react";
-import { useAppContext } from "@contexts/appContext";
-import { useMutation } from "@tanstack/react-query";
+import { useCallback, useMemo, useState } from "react";
 import { LoadingButton } from "@mui/lab";
 import { Link } from "react-router-dom";
-import {
-  ConnectionError,
-  InternalServerError,
-  ResponseError,
-  ResponseErrorCode,
-} from "@sdk/ApiSdk";
+import { ResponseErrorKeys } from "@sdk/ApiSdk";
 import { toFormikValidationSchema } from "zod-formik-adapter";
+import useAuth from "@hooks/useAuth";
+import { CommonError } from "@store/types";
 
 const registerSchema = z.object({
   name: z.string().trim().max(60),
-  username: z.string().max(20).regex(/^[a-z][a-z0-9_\-]*$/),
+  username: z
+    .string()
+    .max(20)
+    .regex(/^[a-z][a-z0-9_\-]*$/),
   password: z.string().max(72),
 });
 
@@ -36,35 +27,31 @@ const initialValues: RegisterValues = {
 };
 
 const RegisterView = () => {
-  const { api, setAuth } = useAppContext();
-  const { mutateAsync, isError, error } = useMutation(
-    ({ name, username, password }: RegisterValues) => api.register({ name, username, password }),
-    {
-      onSuccess: ({ userID, token }) => setAuth({ userID, token }),
-    }
-  );
+  const [error, setError] = useState<null | CommonError>(null);
+  const { register } = useAuth();
 
   const handleSubmit = useCallback(
-    (values: RegisterValues) => mutateAsync(values),
-    [mutateAsync]
+    (values: RegisterValues) => {
+      setError(null);
+      return register(values).catch(err => setError(err));
+    },
+    [register]
   );
 
   const responseError = useMemo(() => {
-    if (error instanceof ResponseError) {
-      switch (error.code) {
-        case ResponseErrorCode.InvalidRequestBodyErrorCode:
-          return "Invalid inputs";
-        case ResponseErrorCode.UsernameRegisteredErrorCode:
-          return "Username already registered";
-      }
+    if (error === null) return null;
+    switch (error.key) {
+      case ResponseErrorKeys.InvalidRequestBodyErrorKey:
+        return "Invalid inputs";
+      case ResponseErrorKeys.UsernameRegisteredErrorKey:
+        return "Username already registered";
+      case "internal-server-error":
+        return "Internal server error";
+      case "connection-error":
+        return "Failed to connect to server";
+      default:
+        return "Unknown error";
     }
-    if (error instanceof InternalServerError) {
-      return "Internal server error";
-    }
-    if (error instanceof ConnectionError) {
-      return "Failed to connect to server";
-    }
-    return "Unknown error";
   }, [error]);
 
   return (
@@ -113,18 +100,12 @@ const RegisterView = () => {
               error={touched.password && Boolean(errors.password)}
               helperText={touched.password && errors.password}
             />
-            {isError && (
+            {responseError && (
               <Alert severity="error" color="error">
                 {responseError}
               </Alert>
             )}
-            <LoadingButton
-              loading={isSubmitting}
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 2 }}
-            >
+            <LoadingButton loading={isSubmitting} type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
               Register
             </LoadingButton>
           </Form>

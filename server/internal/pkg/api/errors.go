@@ -3,31 +3,22 @@ package api
 import "go/types"
 
 const (
-	InvalidRequestBodyErrorCode = 1001
-	UsernameRegisteredErrorCode = 1002
-	InvalidParamsErrorCode      = 1003
-	NotFoundErrorCode           = 1004
-	PasswordMismatchErrorCode   = 1005
-	InvalidAuthTokenErrorCode   = 1006
+	InvalidRequestBodyErrorKey = "invalid-request-body"
+	UsernameRegisteredErrorKey = "username-registered"
+	UserNotFoundErrorKey       = "user-not-found"
+	PasswordMismatchErrorKey   = "password-mismatch"
+	InvalidAuthTokenErrorKey   = "invalid-auth-token"
 )
 
 type ErrorResponse[D any] struct {
-	Code    int    `json:"code"`
+	Key     string `json:"key"`
 	Message string `json:"message"`
 	Data    *D     `json:"data"`
 }
 
 func InvalidRequestBody(message string) ErrorResponse[types.Nil] {
 	return ErrorResponse[types.Nil]{
-		Code:    InvalidRequestBodyErrorCode,
-		Message: message,
-		Data:    nil,
-	}
-}
-
-func InvalidRequestParams(message string) ErrorResponse[types.Nil] {
-	return ErrorResponse[types.Nil]{
-		Code:    InvalidParamsErrorCode,
+		Key:     InvalidRequestBodyErrorKey,
 		Message: message,
 		Data:    nil,
 	}
@@ -35,15 +26,15 @@ func InvalidRequestParams(message string) ErrorResponse[types.Nil] {
 
 func UsernameRegistered() ErrorResponse[types.Nil] {
 	return ErrorResponse[types.Nil]{
-		Code:    UsernameRegisteredErrorCode,
+		Key:     UsernameRegisteredErrorKey,
 		Message: "username already registered",
 		Data:    nil,
 	}
 }
 
-func NotFound(message string) ErrorResponse[types.Nil] {
+func UserNotFound(message string) ErrorResponse[types.Nil] {
 	return ErrorResponse[types.Nil]{
-		Code:    NotFoundErrorCode,
+		Key:     UserNotFoundErrorKey,
 		Message: message,
 		Data:    nil,
 	}
@@ -51,7 +42,7 @@ func NotFound(message string) ErrorResponse[types.Nil] {
 
 func PasswordMismatch() ErrorResponse[types.Nil] {
 	return ErrorResponse[types.Nil]{
-		Code:    PasswordMismatchErrorCode,
+		Key:     PasswordMismatchErrorKey,
 		Message: "hash and password mismatch",
 		Data:    nil,
 	}
@@ -59,7 +50,7 @@ func PasswordMismatch() ErrorResponse[types.Nil] {
 
 func InvalidAuthToken(message string) ErrorResponse[types.Nil] {
 	return ErrorResponse[types.Nil]{
-		Code:    InvalidAuthTokenErrorCode,
+		Key:     InvalidAuthTokenErrorKey,
 		Message: message,
 		Data:    nil,
 	}

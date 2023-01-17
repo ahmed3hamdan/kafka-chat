@@ -1,28 +1,19 @@
-import {
-  Container,
-  TextField,
-  Typography,
-  Link as MuiLink,
-  Stack,
-  Alert,
-} from "@mui/material";
+import { Container, TextField, Typography, Link as MuiLink, Stack, Alert } from "@mui/material";
 import { z } from "zod";
 import { Form, Formik } from "formik";
-import { useCallback, useMemo } from "react";
-import { useAppContext } from "@contexts/appContext";
-import { useMutation } from "@tanstack/react-query";
+import { useCallback, useMemo, useState } from "react";
 import { LoadingButton } from "@mui/lab";
 import { Link } from "react-router-dom";
-import {
-  ConnectionError,
-  InternalServerError,
-  ResponseError,
-  ResponseErrorCode,
-} from "@sdk/ApiSdk";
+import { ResponseErrorKeys } from "@sdk/ApiSdk";
 import { toFormikValidationSchema } from "zod-formik-adapter";
+import useAuth from "@hooks/useAuth";
+import { CommonError } from "@store/types";
 
 const loginSchema = z.object({
-  username: z.string().max(20).regex(/^[a-z][a-z0-9_\-]*$/),
+  username: z
+    .string()
+    .max(20)
+    .regex(/^[a-z][a-z0-9_\-]*$/),
   password: z.string().max(72),
 });
 
@@ -34,37 +25,33 @@ const initialValues: LoginValues = {
 };
 
 const LoginView = () => {
-  const { api, setAuth } = useAppContext();
-  const { mutateAsync, isError, error } = useMutation(
-    ({ username, password }: LoginValues) => api.login({ username, password }),
-    {
-      onSuccess: ({ userID, token }) => setAuth({ userID, token }),
-    }
-  );
+  const [error, setError] = useState<null | CommonError>(null);
+  const { login } = useAuth();
 
   const handleSubmit = useCallback(
-    (values: LoginValues) => mutateAsync(values),
-    [mutateAsync]
+    (values: LoginValues) => {
+      setError(null);
+      return login(values).catch(err => setError(err));
+    },
+    [login]
   );
 
   const responseError = useMemo(() => {
-    if (error instanceof ResponseError) {
-      switch (error.code) {
-        case ResponseErrorCode.InvalidRequestBodyErrorCode:
-          return "Invalid inputs";
-        case ResponseErrorCode.NotFoundErrorCode:
-          return "User not registered";
-        case ResponseErrorCode.PasswordMismatchErrorCode:
-          return "Incorrect password";
-      }
+    if (error === null) return null;
+    switch (error.key) {
+      case ResponseErrorKeys.InvalidRequestBodyErrorKey:
+        return "Invalid inputs";
+      case ResponseErrorKeys.UserNotFoundErrorKey:
+        return "User not registered";
+      case ResponseErrorKeys.PasswordMismatchErrorKey:
+        return "Incorrect password";
+      case "internal-server-error":
+        return "Internal server error";
+      case "connection-error":
+        return "Failed to connect to server";
+      default:
+        return "Unknown error";
     }
-    if (error instanceof InternalServerError) {
-      return "Internal server error";
-    }
-    if (error instanceof ConnectionError) {
-      return "Failed to connect to server";
-    }
-    return "Unknown error";
   }, [error]);
 
   return (
@@ -101,18 +88,12 @@ const LoginView = () => {
               error={touched.password && Boolean(errors.password)}
               helperText={touched.password && errors.password}
             />
-            {isError && (
+            {responseError && (
               <Alert severity="error" color="error">
                 {responseError}
               </Alert>
             )}
-            <LoadingButton
-              loading={isSubmitting}
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 2 }}
-            >
+            <LoadingButton loading={isSubmitting} type="submit" fullWidth variant="contained" sx={{ mt: 2 }}>
               Log in
             </LoadingButton>
           </Form>
