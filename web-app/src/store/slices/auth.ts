@@ -1,4 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
 import apiSdk from "@lib/apiSdk";
 import { LoginParams, RegisterParams } from "@sdk/ApiSdk";
 import serializeError from "@store/utils/serializeError";
@@ -47,4 +49,10 @@ const authSlice = createSlice<AuthState, { logout: () => Extract<AuthState, { lo
 
 export const { logout } = authSlice.actions;
 
-export default authSlice.reducer;
+const persistConfig = {
+  key: "auth",
+  version: 1,
+  storage,
+};
+
+export default persistReducer(persistConfig, authSlice.reducer);
