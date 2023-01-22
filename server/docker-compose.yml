@@ -14,5 +14,35 @@ services:
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
       POSTGRES_DB: $POSTGRES_DB
 
+  zookeeper:
+    container_name: kafka-chat-zookeeper
+    image: bitnami/zookeeper
+    restart: unless-stopped
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper-data:/bitnami/zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  kafka:
+    container_name: kafka-chat-kafka
+    image: bitnami/kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/bitnami/kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
+
 volumes:
   postgres-data:
+  zookeeper-data:
+  kafka-data:
