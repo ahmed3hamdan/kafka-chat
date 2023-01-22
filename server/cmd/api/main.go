@@ -44,7 +44,7 @@ func main() {
 	authRoute.Post("/register", auth.Register)
 	authRoute.Post("/get-self-info", auth.RequireAuthMiddleware, auth.GetSelfInfo)
 	userRoute.Post("/get-by-username", auth.RequireAuthMiddleware, user.GetUserByUsername)
-	messageRoute.Post("/", auth.RequireAuthMiddleware, message.SendMessage)
+	messageRoute.Post("/send-message", auth.RequireAuthMiddleware, message.SendMessage)
 
 	app.Hooks().OnListen(func() error {
 		logrus.Infoln("api is listening on " + config.ApiAddress)
