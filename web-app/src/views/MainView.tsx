@@ -25,6 +25,7 @@ import NewConversationDialog, { NewConversationValues } from "@components/overla
 import { Components, Virtuoso } from "react-virtuoso";
 import { SingleConversation } from "@sdk/types";
 import useAuth from "@hooks/useAuth";
+import useSelfInfo from "@hooks/useSelfInfo";
 
 const StyledVirtuoso = styled(Virtuoso)`
   flex-grow: 1;
@@ -82,6 +83,9 @@ const layoutCss = css`
 
 const MainView = () => {
   const { logout } = useAuth();
+  const {
+    data: { name, username },
+  } = useSelfInfo();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [openDialog, setOpenDialog] = useState<DialogId | null>(null);
 
@@ -141,9 +145,9 @@ const MainView = () => {
             }
           >
             <ListItemAvatar>
-              <Avatar alt={"selfInfoQuery.data.name"}>{"selfInfoQuery.data.name".charAt(0)}</Avatar>
+              <Avatar alt={name}>{name.toUpperCase().charAt(0)}</Avatar>
             </ListItemAvatar>
-            <ListItemText primary={<Typography noWrap>{"selfInfoQuery.data.name"}</Typography>} secondary={"selfInfoQuery.data.username"} />
+            <ListItemText primary={<Typography noWrap>{name}</Typography>} secondary={username} />
           </ListItem>
           <Divider />
           <StyledVirtuoso
