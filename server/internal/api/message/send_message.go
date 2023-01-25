@@ -1,13 +1,13 @@
 package message
 
 import (
-	"encoding/json"
 	"github.com/Shopify/sarama"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/api"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/config"
-	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/kafka"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/model"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/validator"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"log"
 )
 
@@ -31,28 +31,53 @@ func SendMessage(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestBody(err.Error()))
 	}
 
-	sendID := c.Locals("userID").(int64)
+	messageKey := uuid.NewString()
+	fromUserID := c.Locals("userID").(int64)
+	toUserID := body.UserID
+	content := body.Content
 
-	message := kafka.Message{
-		SendID:    sendID,
-		ReceiveID: body.UserID,
-		Content:   body.Content,
+	messagesMap := make(map[int64]model.Message)
+
+	messagesMap[fromUserID] = model.Message{
+		OwnerUserID: fromUserID,
+		FromUserID:  fromUserID,
+		ToUserID:    toUserID,
+		Key:         messageKey,
+		Content:     content,
 	}
 
-	jsonMessage, err := json.Marshal(message)
-	if err != nil {
-		return err
+	messagesMap[toUserID] = model.Message{
+		OwnerUserID: toUserID,
+		FromUserID:  fromUserID,
+		ToUserID:    toUserID,
+		Key:         messageKey,
+		Content:     content,
 	}
 
-	producerMessage := &sarama.ProducerMessage{
-		Topic: "message",
-		Value: sarama.ByteEncoder(jsonMessage),
+	messages := make([]model.Message, 0, len(messagesMap))
+	for _, message := range messagesMap {
+		messages = append(messages, message)
 	}
 
-	_, _, err = producer.SendMessage(producerMessage)
-	if err != nil {
-		return err
-	}
+	//kafkaMessages := make([]*sarama.ProducerMessage, 1)
+	//
+	//kafkaMessages[0] = &sarama.ProducerMessage{
+	//	Topic: "message",
+	//	Key:   sarama.ByteEncoder(strconv.FormatInt(fromUserID, 10)),
+	//	Value: bytesValue,
+	//}
 
-	return c.SendStatus(fiber.StatusOK)
+	//if fromUserID != toUserID {
+	//kafkaMessages = append(kafkaMessages, &sarama.ProducerMessage{
+	//	Topic: "message",
+	//	Key:   sarama.ByteEncoder(strconv.FormatInt(toUserID, 10)),
+	//	Value: bytesValue,
+	//})
+	//}
+
+	//if err = producer.SendMessages(kafkaMessages); err != nil {
+	//	return err
+	//}
+
+	return c.JSON(api.SendMessageResponse{MessageKey: messageKey})
 }

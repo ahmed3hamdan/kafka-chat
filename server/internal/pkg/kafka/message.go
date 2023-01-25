@@ -1,7 +1,8 @@
 package kafka
 
 type Message struct {
-	SendID    int64  `json:"sendID"`
-	ReceiveID int64  `json:"receiveID"`
-	Content   string `json:"content"`
+	Key        string `json:"key"`
+	FromUserID int64  `json:"fromUserID"`
+	ToUserID   int64  `json:"toUserID"`
+	Content    string `json:"content"`
 }

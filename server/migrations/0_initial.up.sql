@@ -11,20 +11,23 @@ CREATE TABLE "user"
 -- Messages table
 CREATE TABLE "message"
 (
-    "messageID"  SERIAL PRIMARY KEY,
-    "fromUserID" INT  NOT NULL references "user" ("userID"),
-    "toUserID"   INT  NOT NULL references "user" ("userID"),
-    "content"    TEXT NOT NULL,
-    "createdAt"  DATE NOT NULL DEFAULT NOW()
+    "messageID"   SERIAL PRIMARY KEY,
+    "ownerUserID" INT  NOT NULL references "user" ("userID"),
+    "fromUserID"  INT  NOT NULL references "user" ("userID"),
+    "toUserID"    INT  NOT NULL references "user" ("userID"),
+    "key"         TEXT NOT NULL unique,
+    "content"     TEXT NOT NULL,
+    "createdAt"   DATE NOT NULL DEFAULT NOW()
 );
 
 -- Conversations table
 CREATE TABLE "conversation"
 (
-    "userID"        INT  NOT NULL references "user" ("userID"),
-    "withUserID"    INT  NOT NULL references "user" ("userID"),
-    "latestMessage" INT  NOT NULL references "user" ("userID"),
-    "createdAt"     DATE NOT NULL DEFAULT NOW(),
-    "updatedAt"     DATE NOT NULL DEFAULT NOW(),
-    PRIMARY KEY ("userID", "withUserID")
+    "conversationID" SERIAL PRIMARY KEY,
+    "ownerUserID"    INT  NOT NULL references "user" ("userID"),
+    "withUserID"     INT  NOT NULL references "user" ("userID"),
+    "latestMessage"  INT  NOT NULL references "message" ("messageID"),
+    "createdAt"      DATE NOT NULL DEFAULT NOW(),
+    "updatedAt"      DATE NOT NULL DEFAULT NOW(),
+    UNIQUE ("ownerUserID", "withUserID")
 );
