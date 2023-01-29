@@ -1,8 +1,11 @@
 package kafka
 
+import "time"
+
 type Message struct {
-	Key        string `json:"key"`
-	FromUserID int64  `json:"fromUserID"`
-	ToUserID   int64  `json:"toUserID"`
-	Content    string `json:"content"`
+	Key        string
+	FromUserID int64
+	ToUserID   int64
+	Content    string
+	CreatedAt  time.Time
 }
