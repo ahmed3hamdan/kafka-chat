@@ -11,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jaevor/go-nanoid"
 	"github.com/sirupsen/logrus"
-	"strconv"
 	"time"
 )
 
@@ -45,59 +44,31 @@ func SendMessage(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.InvalidRequestBody(err.Error()))
 	}
 
-	messageKey := messageKeyGenerator()
-	fromUserID := c.Locals("userID").(int64)
-	toUserID := body.UserID
-	content := body.Content
-
-	messagesMap := make(map[int64]model.Message)
-
-	messagesMap[fromUserID] = model.Message{
-		OwnerUserID: fromUserID,
-		FromUserID:  fromUserID,
-		ToUserID:    toUserID,
-		Key:         messageKey,
-		Content:     content,
-	}
-
-	messagesMap[toUserID] = model.Message{
-		OwnerUserID: toUserID,
-		FromUserID:  fromUserID,
-		ToUserID:    toUserID,
-		Key:         messageKey,
-		Content:     content,
-	}
-
-	messages := make([]model.Message, 0, len(messagesMap))
-	for _, message := range messagesMap {
-		messages = append(messages, message)
-	}
-
-	if err := model.InsertMessages(c.Context(), messages); err != nil {
+	if _, err := model.GetUserById(c.Context(), body.UserID); err == model.UserNotFoundError {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(api.UserNotFound(err.Error()))
+	} else if err != nil {
 		return err
 	}
 
-	kafkaMessages := make([]*sarama.ProducerMessage, len(messages))
-	for i, message := range messages {
-		kafkaKey := strconv.FormatInt(message.OwnerUserID, 10)
-		kafkaValue, err := json.Marshal(kafka.Message{
-			Key:        message.Key,
-			FromUserID: message.FromUserID,
-			ToUserID:   message.ToUserID,
-			Content:    message.Content,
-			CreatedAt:  time.Now(),
-		})
-		if err != nil {
-			return err
-		}
-		kafkaMessages[i] = &sarama.ProducerMessage{
-			Topic: "message",
-			Key:   sarama.StringEncoder(kafkaKey),
-			Value: sarama.ByteEncoder(kafkaValue),
-		}
+	messageKey := messageKeyGenerator()
+	fromUserID := c.Locals("userID").(int64)
+	toUserID := body.UserID
+
+	kafkaValue, err := json.Marshal(kafka.MessageBody{
+		FromUserID: fromUserID,
+		ToUserID:   toUserID,
+		Key:        messageKey,
+		Content:    body.Content,
+		CreatedAt:  time.Now(),
+	})
+	if err != nil {
+		return err
 	}
 
-	if err := producer.SendMessages(kafkaMessages); err != nil {
+	if _, _, err = producer.SendMessage(&sarama.ProducerMessage{
+		Topic: "message",
+		Value: sarama.ByteEncoder(kafkaValue),
+	}); err != nil {
 		return err
 	}
 

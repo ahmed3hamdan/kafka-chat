@@ -2,7 +2,7 @@ package kafka
 
 import "time"
 
-type Message struct {
+type MessageBody struct {
 	Key        string
 	FromUserID int64
 	ToUserID   int64

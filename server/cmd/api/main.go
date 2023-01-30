@@ -5,6 +5,7 @@ import (
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/message"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/user"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/config"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/kafka"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/golang-migrate/migrate/v4"
@@ -12,6 +13,10 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/sirupsen/logrus"
 )
+
+func init() {
+	logrus.SetLevel(logrus.DebugLevel)
+}
 
 func init() {
 	migration, err := migrate.New("file://migrations", config.PostgresUrl)
@@ -28,6 +33,14 @@ func init() {
 }
 
 func main() {
+	if dbConsumer, err := kafka.NewDbMessageConsumer(); err != nil {
+		logrus.Fatalln(err)
+	} else {
+		go func() {
+			dbConsumer.Start()
+		}()
+	}
+
 	app := fiber.New(fiber.Config{
 		CaseSensitive: true,
 	})
