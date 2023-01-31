@@ -52,6 +52,7 @@ func (h dbConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, c
 		messagesMap := make(map[int64]model.Message)
 		messagesMap[body.FromUserID] = model.Message{
 			OwnerUserID: body.FromUserID,
+			WithUserID:  body.ToUserID,
 			FromUserID:  body.FromUserID,
 			ToUserID:    body.ToUserID,
 			Key:         body.Key,
@@ -59,6 +60,7 @@ func (h dbConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, c
 		}
 		messagesMap[body.ToUserID] = model.Message{
 			OwnerUserID: body.ToUserID,
+			WithUserID:  body.FromUserID,
 			FromUserID:  body.FromUserID,
 			ToUserID:    body.ToUserID,
 			Key:         body.Key,
