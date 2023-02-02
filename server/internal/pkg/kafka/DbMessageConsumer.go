@@ -6,6 +6,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/config"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/model"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -76,7 +77,12 @@ func (h dbConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, c
 			return err
 		}
 
-		logrus.WithField("message", body).Debugln("message consumed to database successfully")
+		logrus.WithField("message", body).Debugln("message inserted successfully")
+
+		if err := model.InsertOrUpdateConversation(sess.Context(), body.FromUserID, body.ToUserID, utils.GenerateKey(), body.Content); err != nil {
+			logrus.WithField("message", body).Errorln("failed to insert or update conversation", err)
+		}
+
 		sess.MarkMessage(msg, "")
 	}
 	return nil

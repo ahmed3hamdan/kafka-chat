@@ -3,6 +3,7 @@ package message
 import (
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/api"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/model"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/utils"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/validator"
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,30 +20,27 @@ func GetHistory(c *fiber.Ctx) error {
 	}
 
 	ownerUserID := c.Locals("userID").(int64)
-	messages, err := model.GetMessagesHistory(c.Context(), body.BeforeKey, ownerUserID, body.WithUserID, body.Limit)
+	messages, err := model.GetMessagesHistory(c.Context(), body.PageKey, ownerUserID, body.WithUserID, body.Limit+1)
 	if err != nil {
 		return err
 	}
 
-	l := len(messages)
-	apiMessages := make([]api.Message, l)
-	for i, message := range messages {
-		apiMessages[i] = api.Message{
-			Key:        message.Key,
-			FromUserID: message.FromUserID,
-			ToUserID:   message.ToUserID,
-			Content:    message.Content,
-			CreatedAt:  message.CreatedAt,
+	var response api.GetHistoryResponse
+	pageLength := utils.MinInt(len(messages), body.Limit)
+	response.Entries = make([]api.Message, pageLength)
+	for i := 0; i < pageLength; i++ {
+		response.Entries[i] = api.Message{
+			Key:        messages[i].Key,
+			FromUserID: messages[i].FromUserID,
+			ToUserID:   messages[i].ToUserID,
+			Content:    messages[i].Content,
+			CreatedAt:  messages[i].CreatedAt,
 		}
 	}
 
-	hasMore, err := model.GetMessagesHistoryHasMore(c.Context(), messages[l-1].Key, ownerUserID, body.WithUserID)
-	if err != nil {
-		return err
+	if len(messages) > body.Limit {
+		response.NextPageKey = &messages[body.Limit].Key
 	}
 
-	return c.JSON(api.GetHistoryResponse{
-		Messages: apiMessages,
-		HasMore:  hasMore,
-	})
+	return c.JSON(response)
 }

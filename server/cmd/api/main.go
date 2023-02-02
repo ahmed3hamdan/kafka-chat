@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/auth"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/conversation"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/message"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/api/user"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/config"
@@ -52,6 +53,7 @@ func main() {
 	authRoute := apiRoute.Group("/auth")
 	userRoute := apiRoute.Group("/user")
 	messageRoute := apiRoute.Group("/message")
+	conversationRoute := apiRoute.Group("/conversation")
 
 	authRoute.Post("/login", auth.Login)
 	authRoute.Post("/register", auth.Register)
@@ -59,6 +61,7 @@ func main() {
 	userRoute.Post("/get-by-username", auth.RequireAuthMiddleware, user.GetUserByUsername)
 	messageRoute.Post("/send-message", auth.RequireAuthMiddleware, message.SendMessage)
 	messageRoute.Post("/get-history", auth.RequireAuthMiddleware, message.GetHistory)
+	conversationRoute.Post("/list", auth.RequireAuthMiddleware, conversation.ListConversations)
 
 	app.Hooks().OnListen(func() error {
 		logrus.Infoln("api is listening on " + config.ApiAddress)

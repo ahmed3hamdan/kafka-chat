@@ -7,9 +7,9 @@ import (
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/config"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/kafka"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/model"
+	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/utils"
 	"github.com/ahmed3hamdan/kafka-chat/server/internal/pkg/validator"
 	"github.com/gofiber/fiber/v2"
-	"github.com/jaevor/go-nanoid"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -19,16 +19,6 @@ var producer sarama.SyncProducer
 func init() {
 	var err error
 	if producer, err = sarama.NewSyncProducer([]string{config.KafkaAddress}, nil); err != nil {
-		logrus.Fatalln(err)
-	}
-}
-
-var messageKeyGenerator func() string
-
-func init() {
-	var err error
-	messageKeyGenerator, err = nanoid.Standard(21)
-	if err != nil {
 		logrus.Fatalln(err)
 	}
 }
@@ -50,7 +40,7 @@ func SendMessage(c *fiber.Ctx) error {
 		return err
 	}
 
-	messageKey := messageKeyGenerator()
+	messageKey := utils.GenerateKey()
 	fromUserID := c.Locals("userID").(int64)
 	toUserID := body.UserID
 
